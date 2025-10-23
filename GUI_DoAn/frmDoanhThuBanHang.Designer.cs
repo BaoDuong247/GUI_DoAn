@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmDoanhThuBanHang));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.TroVe = new System.Windows.Forms.ToolStripButton();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnReset = new System.Windows.Forms.Button();
@@ -41,10 +41,10 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label2 = new System.Windows.Forms.Label();
             this.txtTDT = new System.Windows.Forms.TextBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -53,20 +53,21 @@
             // 
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton1});
+            this.TroVe});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(609, 27);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripButton1
+            // TroVe
             // 
-            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(73, 24);
-            this.toolStripButton1.Text = "Trở về";
+            this.TroVe.Image = ((System.Drawing.Image)(resources.GetObject("TroVe.Image")));
+            this.TroVe.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.TroVe.Name = "TroVe";
+            this.TroVe.Size = new System.Drawing.Size(73, 24);
+            this.TroVe.Text = "Trở về";
+            this.TroVe.Click += new System.EventHandler(this.TroVe_Click);
             // 
             // label1
             // 
@@ -99,6 +100,7 @@
             this.btnReset.TabIndex = 3;
             this.btnReset.Text = "Reset";
             this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
             // btnTK
             // 
@@ -108,6 +110,7 @@
             this.btnTK.TabIndex = 3;
             this.btnTK.Text = "Tìm Kiếm";
             this.btnTK.UseVisualStyleBackColor = true;
+            this.btnTK.Click += new System.EventHandler(this.btnTK_Click);
             // 
             // txtTKTNTN
             // 
@@ -133,8 +136,8 @@
             this.columnHeader1,
             this.columnHeader2,
             this.columnHeader3,
-            this.columnHeader4,
             this.columnHeader5});
+            this.lvDTBH.FullRowSelect = true;
             this.lvDTBH.GridLines = true;
             this.lvDTBH.HideSelection = false;
             this.lvDTBH.Location = new System.Drawing.Point(6, 88);
@@ -152,22 +155,17 @@
             // columnHeader2
             // 
             this.columnHeader2.Text = "NGAYTAO";
-            this.columnHeader2.Width = 70;
+            this.columnHeader2.Width = 90;
             // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "ID_USER";
             this.columnHeader3.Width = 70;
             // 
-            // columnHeader4
-            // 
-            this.columnHeader4.Text = "ID_KH";
-            this.columnHeader4.Width = 70;
-            // 
             // columnHeader5
             // 
             this.columnHeader5.Text = "THANHTIEN";
-            this.columnHeader5.Width = 70;
+            this.columnHeader5.Width = 118;
             // 
             // label2
             // 
@@ -188,11 +186,22 @@
             this.txtTDT.Size = new System.Drawing.Size(134, 46);
             this.txtTDT.TabIndex = 4;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(18, 467);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 34);
+            this.button1.TabIndex = 4;
+            this.button1.Text = "Xóa HD";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // frmDoanhThuBanHang
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(609, 518);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.txtTDT);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.groupBox1);
@@ -200,6 +209,8 @@
             this.Controls.Add(this.toolStrip1);
             this.Name = "frmDoanhThuBanHang";
             this.Text = "frmDoanhThuBanHang";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmDoanhThuBanHang_FormClosed);
+            this.Load += new System.EventHandler(this.frmDoanhThuBanHang_Load);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
@@ -212,7 +223,7 @@
         #endregion
 
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
+        private System.Windows.Forms.ToolStripButton TroVe;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label2;
@@ -225,7 +236,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ColumnHeader columnHeader3;
-        private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.Button button1;
     }
 }

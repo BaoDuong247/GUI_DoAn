@@ -8,13 +8,12 @@ namespace DAL_DoAn.Models
     public partial class TiemBanhDB : DbContext
     {
         public TiemBanhDB()
-            : base("name=TiemBanhDB")
+            : base("name=TiemBanhDB2")
         {
         }
 
         public virtual DbSet<CHITIET_HOADON> CHITIET_HOADON { get; set; }
         public virtual DbSet<HOADON> HOADONs { get; set; }
-        public virtual DbSet<KHACHHANG> KHACHHANGs { get; set; }
         public virtual DbSet<LOAISP> LOAISPs { get; set; }
         public virtual DbSet<NHANVIEN> NHANVIENs { get; set; }
         public virtual DbSet<SANPHAM> SANPHAMs { get; set; }
@@ -37,29 +36,6 @@ namespace DAL_DoAn.Models
             modelBuilder.Entity<HOADON>()
                 .Property(e => e.ID_USER)
                 .IsUnicode(false);
-
-            modelBuilder.Entity<HOADON>()
-                .Property(e => e.ID_KH)
-                .IsUnicode(false);
-
-            modelBuilder.Entity<HOADON>()
-                .HasOptional(e => e.CHITIET_HOADON)
-                .WithRequired(e => e.HOADON)
-                .WillCascadeOnDelete();
-
-            modelBuilder.Entity<KHACHHANG>()
-                .Property(e => e.ID_KH)
-                .IsUnicode(false);
-
-            modelBuilder.Entity<KHACHHANG>()
-                .Property(e => e.SDT_KH)
-                .IsFixedLength()
-                .IsUnicode(false);
-
-            modelBuilder.Entity<KHACHHANG>()
-                .HasMany(e => e.HOADONs)
-                .WithOptional(e => e.KHACHHANG)
-                .WillCascadeOnDelete();
 
             modelBuilder.Entity<LOAISP>()
                 .Property(e => e.IDLOAI)
@@ -101,16 +77,6 @@ namespace DAL_DoAn.Models
             modelBuilder.Entity<SANPHAM>()
                 .Property(e => e.IDLOAI)
                 .IsUnicode(false);
-
-            modelBuilder.Entity<SANPHAM>()
-                .Property(e => e.SIZE)
-                .IsFixedLength()
-                .IsUnicode(false);
-
-            modelBuilder.Entity<SANPHAM>()
-                .HasMany(e => e.CHITIET_HOADON)
-                .WithOptional(e => e.SANPHAM)
-                .WillCascadeOnDelete();
 
             modelBuilder.Entity<TAIKHOAN>()
                 .Property(e => e.ID)

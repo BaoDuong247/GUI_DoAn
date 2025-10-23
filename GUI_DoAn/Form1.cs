@@ -14,6 +14,8 @@ namespace GUI_DoAn
 {
     public partial class Form1 : Form
     {
+        public static string currentUserId = "";
+        public static string currentUserRole = "";
         TaiKhoanService taiKhoanService = new TaiKhoanService();
 
         public Form1()
@@ -24,6 +26,7 @@ namespace GUI_DoAn
         private void Form1_Load(object sender, EventArgs e)
         {
             txtMK.UseSystemPasswordChar = true;
+
         }
 
         private void ckbHTMK_CheckedChanged(object sender, EventArgs e)
@@ -33,46 +36,65 @@ namespace GUI_DoAn
 
         private void btnDN_Click(object sender, EventArgs e)
         {
-            try
+            string username = txtTK.Text.Trim();
+            string password = txtMK.Text.Trim();
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                string user = txtTK.Text.Trim();
-                string pass = txtMK.Text.Trim();
+                MessageBox.Show("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
+                return;
+            }
 
-                if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+            using (var db = new TiemBanhDB())
+            {
+
+                var tk = db.TAIKHOANs
+               .ToList() 
+               .FirstOrDefault(t => t.USERNAME == username && t.PASSWORD_USER == password);
+
+                if (tk != null)
                 {
-                    MessageBox.Show("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!",
-                        "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
+                    var nv = db.NHANVIENs.FirstOrDefault(n => n.ID == tk.ID);
 
-                bool isLogin = taiKhoanService.KiemTraDangNhap(user, pass);
+                    if (nv != null)
+                    {
+                        currentUserId = nv.ID;
+                        currentUserRole = nv.CHUCVU;
+                    }
 
-                if (isLogin)
-                {
-                    MessageBox.Show("Đăng nhập thành công!", "Thông báo",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("✅ Đăng nhập thành công!");
 
-                    frmMenu frm = new frmMenu();
                     this.Hide();
-                    frm.ShowDialog();
-                    this.Show();
+                    frmMenu menu = new frmMenu(nv);
+                    menu.Show();
                 }
                 else
                 {
-                    MessageBox.Show("Sai tài khoản hoặc mật khẩu!", "Lỗi",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("❌ Sai tài khoản hoặc mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Đã xảy ra lỗi trong quá trình đăng nhập: " + ex.Message,
-                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void btnH_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void Form1_Activated(object sender, EventArgs e)
+        {
+            txtTK.Clear();
+            txtMK.Clear();
+            txtTK.Focus();
         }
     }
 }

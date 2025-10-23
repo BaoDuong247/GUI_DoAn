@@ -9,9 +9,12 @@ namespace DAL_DoAn.Models
     public partial class CHITIET_HOADON
     {
         [Key]
+        [Column(Order = 0)]
         [StringLength(6)]
         public string IDHD { get; set; }
 
+        [Key]
+        [Column(Order = 1)]
         [StringLength(6)]
         public string IDSP { get; set; }
 

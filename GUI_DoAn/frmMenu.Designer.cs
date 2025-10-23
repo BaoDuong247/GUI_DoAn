@@ -76,7 +76,7 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(463, 66);
             this.label6.TabIndex = 23;
-            this.label6.Text = "Sản Phẩm";
+            this.label6.Text = "Số Lượng Sản Phẩm";
             this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // groupBox2
@@ -87,7 +87,7 @@
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(463, 214);
+            this.groupBox2.Size = new System.Drawing.Size(463, 170);
             this.groupBox2.TabIndex = 32;
             this.groupBox2.TabStop = false;
             // 
@@ -97,17 +97,17 @@
             this.richTextBox1.Location = new System.Drawing.Point(0, 71);
             this.richTextBox1.Margin = new System.Windows.Forms.Padding(4);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(462, 142);
+            this.richTextBox1.Size = new System.Drawing.Size(462, 95);
             this.richTextBox1.TabIndex = 24;
             this.richTextBox1.Text = "";
             // 
             // richTextBox2
             // 
             this.richTextBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.richTextBox2.Location = new System.Drawing.Point(0, 71);
+            this.richTextBox2.Location = new System.Drawing.Point(1, 71);
             this.richTextBox2.Margin = new System.Windows.Forms.Padding(4);
             this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(440, 142);
+            this.richTextBox2.Size = new System.Drawing.Size(440, 96);
             this.richTextBox2.TabIndex = 25;
             this.richTextBox2.Text = "";
             // 
@@ -119,7 +119,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(448, 214);
+            this.groupBox1.Size = new System.Drawing.Size(448, 171);
             this.groupBox1.TabIndex = 31;
             this.groupBox1.TabStop = false;
             // 
@@ -131,30 +131,32 @@
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(440, 66);
             this.label4.TabIndex = 22;
-            this.label4.Text = "Thành Viên";
+            this.label4.Text = "Số Lượng Thành Viên";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnOrder
             // 
             this.btnOrder.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnOrder.Location = new System.Drawing.Point(853, 330);
+            this.btnOrder.Location = new System.Drawing.Point(853, 283);
             this.btnOrder.Margin = new System.Windows.Forms.Padding(4);
             this.btnOrder.Name = "btnOrder";
             this.btnOrder.Size = new System.Drawing.Size(461, 41);
             this.btnOrder.TabIndex = 30;
             this.btnOrder.Text = "ORDER";
             this.btnOrder.UseVisualStyleBackColor = false;
+            this.btnOrder.Click += new System.EventHandler(this.btnOrder_Click);
             // 
             // btnAdmin
             // 
             this.btnAdmin.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnAdmin.Location = new System.Drawing.Point(404, 330);
+            this.btnAdmin.Location = new System.Drawing.Point(405, 283);
             this.btnAdmin.Margin = new System.Windows.Forms.Padding(4);
             this.btnAdmin.Name = "btnAdmin";
             this.btnAdmin.Size = new System.Drawing.Size(441, 41);
             this.btnAdmin.TabIndex = 29;
             this.btnAdmin.Text = "ADMIN";
             this.btnAdmin.UseVisualStyleBackColor = false;
+            this.btnAdmin.Click += new System.EventHandler(this.btnAdmin_Click);
             // 
             // label2
             // 
@@ -181,7 +183,7 @@
             // btnSP
             // 
             this.btnSP.BackColor = System.Drawing.Color.Black;
-            this.btnSP.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.btnSP.ForeColor = System.Drawing.Color.Transparent;
             this.btnSP.Location = new System.Drawing.Point(88, 78);
             this.btnSP.Margin = new System.Windows.Forms.Padding(4);
             this.btnSP.Name = "btnSP";
@@ -189,11 +191,12 @@
             this.btnSP.TabIndex = 19;
             this.btnSP.Text = "Sản Phẩm";
             this.btnSP.UseVisualStyleBackColor = false;
+            this.btnSP.Click += new System.EventHandler(this.btnSP_Click);
             // 
             // btnTV
             // 
             this.btnTV.BackColor = System.Drawing.Color.Black;
-            this.btnTV.ForeColor = System.Drawing.Color.White;
+            this.btnTV.ForeColor = System.Drawing.Color.Transparent;
             this.btnTV.Location = new System.Drawing.Point(88, 42);
             this.btnTV.Margin = new System.Windows.Forms.Padding(4);
             this.btnTV.Name = "btnTV";
@@ -214,6 +217,7 @@
             this.btnDT.TabIndex = 17;
             this.btnDT.Text = "Doanh Thu";
             this.btnDT.UseVisualStyleBackColor = false;
+            this.btnDT.Click += new System.EventHandler(this.btnDT_Click);
             // 
             // btnT
             // 
@@ -302,10 +306,10 @@
             // pictureBox2
             // 
             this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
-            this.pictureBox2.Location = new System.Drawing.Point(404, 378);
+            this.pictureBox2.Location = new System.Drawing.Point(404, 330);
             this.pictureBox2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(910, 306);
+            this.pictureBox2.Size = new System.Drawing.Size(910, 354);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox2.TabIndex = 27;
             this.pictureBox2.TabStop = false;
@@ -326,6 +330,7 @@
             this.Controls.Add(this.lblTenDangNhap);
             this.Name = "frmMenu";
             this.Text = "Menu";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMenu_FormClosing);
             this.Load += new System.EventHandler(this.frmMenu_Load);
             this.groupBox2.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);

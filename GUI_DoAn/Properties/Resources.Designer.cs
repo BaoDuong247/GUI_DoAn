@@ -63,6 +63,16 @@ namespace GUI_DoAn.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Screenshot_2025_10_22_180043 {
+            get {
+                object obj = ResourceManager.GetObject("Screenshot 2025-10-22 180043", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap z7132958521443_863f7ec73ccd69fc4a99cf874d3f6e9b {
             get {
                 object obj = ResourceManager.GetObject("z7132958521443_863f7ec73ccd69fc4a99cf874d3f6e9b", resourceCulture);

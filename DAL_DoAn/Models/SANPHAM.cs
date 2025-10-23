@@ -31,10 +31,12 @@ namespace DAL_DoAn.Models
 
         public int? SOLUONG { get; set; }
 
-        [StringLength(2)]
+        [StringLength(3)]
         public string SIZE { get; set; }
 
         public bool? TRANGTHAI { get; set; }
+
+        public byte[] ANHSP { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<CHITIET_HOADON> CHITIET_HOADON { get; set; }
