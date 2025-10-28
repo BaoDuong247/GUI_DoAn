@@ -52,9 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChiTietHoaDonService.cs" />
-    <Compile Include="Class1.cs" />
     <Compile Include="HoaDonService.cs" />
-    <Compile Include="KhachHangService.cs" />
     <Compile Include="LoaiSPService.cs" />
     <Compile Include="NhanVienService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

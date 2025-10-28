@@ -1,4 +1,5 @@
-﻿using DAL_DoAn.Models;
+﻿using BUS_DoAn;
+using DAL_DoAn.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,12 +14,15 @@ namespace GUI_DoAn
 {
     public partial class frmMenu : Form
     {
+        private readonly NhanVienService nvService = new NhanVienService();
+        private readonly SanPhamService spService = new SanPhamService();
+        private readonly HoaDonService hdService = new HoaDonService();
         private NHANVIEN nhanVienDangNhap; 
 
         public frmMenu(NHANVIEN nv)
         {
             InitializeComponent();
-            nhanVienDangNhap = nv; 
+            nhanVienDangNhap = nv; // Lưu thông tin nhân viên đăng nhập
         }
         public frmMenu(TAIKHOAN taiKhoan)
         {
@@ -72,43 +76,50 @@ namespace GUI_DoAn
 
         private void btnT_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            DialogResult result = MessageBox.Show(
+        "Bạn có chắc chắn muốn thoát không?",
+        "Xác nhận thoát",
+        MessageBoxButtons.YesNo,
+        MessageBoxIcon.Question
+          );
+
+            if (result == DialogResult.Yes)
+            {
+                Application.Exit(); // ❌ Thoát toàn bộ chương trình
+            }
+
         }
+
+
         private bool isShowingCount = false;
         private void btnAdmin_Click(object sender, EventArgs e)
         {
-            using (var db = new TiemBanhDB())
+            int soLuongNV = nvService.GetAll().Count;
+            int soLuongSP = spService.GetAll().Count;
+
+            if (richTextBox1.Text == "" && richTextBox2.Text == "")
             {
-                if (!isShowingCount)
-                {
-                    int soLuongNV = db.NHANVIENs.Count();
-                    richTextBox2.ReadOnly = true; 
-                    richTextBox2.BackColor = Color.White; 
-                    richTextBox2.Font = new Font("Segoe UI", 28, FontStyle.Bold);
-                    richTextBox2.ForeColor = Color.DarkBlue;
-                    richTextBox2.Text = soLuongNV.ToString();
-                    richTextBox2.SelectionAlignment = HorizontalAlignment.Center;
+                richTextBox1.ReadOnly = true;
+                richTextBox1.BackColor = Color.White;
+                richTextBox1.Font = new Font("Segoe UI", 28, FontStyle.Bold);
+                richTextBox1.ForeColor = Color.DarkGreen;
+                richTextBox1.Text = soLuongSP.ToString();
+                richTextBox1.SelectionAlignment = HorizontalAlignment.Center;
 
-                    int soLuongSP = db.SANPHAMs.Count(sp => !string.IsNullOrEmpty(sp.IDSP));
-                    richTextBox1.ReadOnly = true;
-                    richTextBox1.BackColor = Color.White;
-                    richTextBox1.Font = new Font("Segoe UI", 28, FontStyle.Bold);
-                    richTextBox1.ForeColor = Color.DarkGreen;
-                    richTextBox1.Text = soLuongSP.ToString();
-                    richTextBox1.SelectionAlignment = HorizontalAlignment.Center;
-
-                    isShowingCount = true;
-                }
-                else
-                {
-                    richTextBox2.Clear();
-                    richTextBox2.ReadOnly = true;
-                    richTextBox1.Clear();
-                    richTextBox1.ReadOnly = true;
-                    isShowingCount = false;
-                }
+                richTextBox2.ReadOnly = true;
+                richTextBox2.BackColor = Color.White;
+                richTextBox2.Font = new Font("Segoe UI", 28, FontStyle.Bold);
+                richTextBox2.ForeColor = Color.DarkBlue;
+                richTextBox2.Text = soLuongNV.ToString();
+                richTextBox2.SelectionAlignment = HorizontalAlignment.Center;
+            }
+            else
+            {
+                richTextBox1.Clear();
+                richTextBox2.Clear();
             }
         }
+        
 
         
 
@@ -116,24 +127,24 @@ namespace GUI_DoAn
         {
             this.Hide();
 
-            frmQuanLySanPham f = new frmQuanLySanPham();
+            frmQuanLySanPham f = new frmQuanLySanPham(); 
 
             f.FormClosed += (s, args) =>
             {
                 this.Show();
             };
 
-            f.ShowDialog();
+            f.ShowDialog(); 
         }
 
      
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            base.OnFormClosing(e);
+            base.OnFormClosing(e); // Gọi phương thức gốc để đảm bảo các hành động đóng form mặc định được thực hiện
             if (e.CloseReason == CloseReason.UserClosing)
             {
-                if (!Application.OpenForms.OfType<Form1>().Any())
+                if (!Application.OpenForms.OfType<Form1>().Any()) 
                 {
                     Application.Exit();
                 }

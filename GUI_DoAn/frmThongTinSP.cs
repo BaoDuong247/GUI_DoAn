@@ -1,4 +1,5 @@
-﻿using DAL_DoAn.Models;
+﻿using BUS_DoAn;
+using DAL_DoAn.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,6 +16,9 @@ namespace GUI_DoAn
 {
     public partial class frmThongTinSP : Form
     {
+        private readonly SanPhamService spService = new SanPhamService();
+        private readonly HoaDonService hdService = new HoaDonService();
+        private readonly ChiTietHoaDonService cthdService = new ChiTietHoaDonService();
         private List<SANPHAM> danhSachSPHoaDon = new List<SANPHAM>();
         TiemBanhDB db = new TiemBanhDB();
         private SANPHAM selectedSP;
@@ -29,43 +33,40 @@ namespace GUI_DoAn
         public frmThongTinSP(NHANVIEN nv)
         {
             InitializeComponent();
-            nhanVienHienTai = nv;
+            nhanVienHienTai = nv; // Lưu thông tin nhân viên hiện tại
         }
 
         private void btnTVHD_Click(object sender, EventArgs e)
         {
-            if (selectedSP == null)
-            {
-                MessageBox.Show("Vui lòng chọn một sản phẩm để thêm vào hóa đơn.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+            if (selectedSP == null) return;
 
-            // Kiểm tra sản phẩm đã có trong danh sách chưa
             var spTrongHD = danhSachSPHoaDon.FirstOrDefault(sp => sp.IDSP == selectedSP.IDSP);
             if (spTrongHD != null)
             {
-                // Nếu đã có, cập nhật số lượng từ nudSL
                 spTrongHD.SOLUONG = (int)nudSL.Value;
             }
             else
             {
-
-                SANPHAM spMoi = new SANPHAM()
+                danhSachSPHoaDon.Add(new SANPHAM
                 {
                     IDSP = selectedSP.IDSP,
                     TENSP = selectedSP.TENSP,
                     SOLUONG = (int)nudSL.Value,
                     GIABAN = selectedSP.GIABAN
-                };
-                danhSachSPHoaDon.Add(spMoi);
+                });
             }
 
+            RefreshDgvHD();
+        }
+
+        private void RefreshDgvHD()
+        {
             dgvSP.Rows.Clear();
             decimal tongTien = 0;
 
             foreach (var sp in danhSachSPHoaDon)
             {
-                decimal thanhTien = (decimal)sp.GIABAN.GetValueOrDefault(0) * sp.SOLUONG.GetValueOrDefault(0);
+                decimal thanhTien = (decimal)(sp.GIABAN ?? 0) * (sp.SOLUONG ?? 0);
                 dgvSP.Rows.Add(sp.IDSP, sp.TENSP, sp.SOLUONG, sp.GIABAN, thanhTien);
                 tongTien += thanhTien;
             }
@@ -76,33 +77,18 @@ namespace GUI_DoAn
         private void frmThongTinSP_Load(object sender, EventArgs e)
         {
             LoadLvSP();
-            SetReadOnlyControls();
+            SetupControlsReadOnly();
             timer1.Start();
             txtTTHD.Text = "Chờ tạo...";
-            if (nhanVienHienTai != null)
-            {
-                lblTenNhanVien.Text = "Nhân viên: " + nhanVienHienTai.TEN_NV;
-            }
-            else
-            {
-                lblTenNhanVien.Text = "Nhân viên: [Không xác định]";
-            }
-
-            if (dgvSP.Columns.Count == 0)
-            {
-                dgvSP.Columns.Add("IDSP", "IDSP");
-                dgvSP.Columns.Add("TENSP", "SP");
-                dgvSP.Columns.Add("SL", "SL");
-                dgvSP.Columns.Add("DONGIA", "DonGia");
-                dgvSP.Columns.Add("THANHTIEN", "Thanhtien");
-            }
+            lblTenNhanVien.Text = nhanVienHienTai != null
+                                  ? $"Nhân viên: {nhanVienHienTai.TEN_NV}"
+                                  : "Nhân viên: [Không xác định]";
         }
 
         private void LoadLvSP()
         {
             lvSP.Items.Clear();
-
-            var listSP = db.SANPHAMs.Include("LOAISP").ToList();
+            var listSP = spService.GetAll(); // Lấy danh sách từ Service
 
             foreach (var sp in listSP)
             {
@@ -117,9 +103,8 @@ namespace GUI_DoAn
             }
         }
 
-        private void SetReadOnlyControls()
+        private void SetupControlsReadOnly()
         {
-
             txtSTT.ReadOnly = true;
             txtSP.ReadOnly = true;
             txtG.ReadOnly = true;
@@ -127,77 +112,53 @@ namespace GUI_DoAn
             txtIDSP.ReadOnly = true;
             txtS.ReadOnly = true;
             txtCL.ReadOnly = true;
-
             txtTT1.ReadOnly = true;
-
-            // Để người dùng không thể chỉnh sửa hay xóa nội dung, disable luôn
-            txtSP.Enabled = false;
-            txtG.Enabled = false;
-            txtT.Enabled = false;
-            txtIDSP.Enabled = false;
-            txtS.Enabled = false;
-            txtCL.Enabled = false;
-
-            txtTT1.Enabled = false;
-
-
         }
 
         private void lvSP_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (lvSP.SelectedItems.Count > 0)
-            {
-                selectedSP = (SANPHAM)lvSP.SelectedItems[0].Tag;
+            if (lvSP.SelectedItems.Count == 0) return;
 
-                // Hiển thị thông tin
-                txtIDSP.Text = selectedSP.IDSP;
-                txtSP.Text = selectedSP.TENSP;
-                txtG.Text = selectedSP.GIABAN?.ToString();
-                txtT.Text = selectedSP.GIABAN?.ToString();
-                txtS.Text = selectedSP.SIZE;
-                txtCL.Text = selectedSP.SOLUONG?.ToString();
-                txtSTT.Text = lvSP.SelectedItems[0].Index.ToString();
-                nudSL.Value = 0; // reset số lượng chọn
+            selectedSP = (SANPHAM)lvSP.SelectedItems[0].Tag;
 
-                SetReadOnlyControls();
-            }
+            txtIDSP.Text = selectedSP.IDSP;
+            txtSP.Text = selectedSP.TENSP;
+            txtG.Text = selectedSP.GIABAN?.ToString();
+            txtT.Text = selectedSP.GIABAN?.ToString();
+            txtS.Text = selectedSP.SIZE;
+            txtCL.Text = selectedSP.SOLUONG?.ToString();
+            txtSTT.Text = lvSP.SelectedItems[0].Index.ToString();
+            nudSL.Value = 0;
         }
 
         private void nudSL_ValueChanged(object sender, EventArgs e)
         {
-            if (selectedSP != null)
+            if (selectedSP == null) return;
+
+            int soLuongTon = selectedSP.SOLUONG ?? 0;
+            int soLuongChon = (int)nudSL.Value;
+
+            if (soLuongChon > soLuongTon)
             {
-                int soLuongTon = selectedSP.SOLUONG.GetValueOrDefault(0);
-                int soLuongChon = (int)nudSL.Value;
-
-                if (soLuongChon > soLuongTon)
-                {
-                    MessageBox.Show("Số lượng vượt quá tồn kho!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    nudSL.Value = soLuongTon;
-                    soLuongChon = soLuongTon;
-                }
-
-                int soLuongConLai = soLuongTon - soLuongChon;
-                txtCL.Text = soLuongConLai.ToString();
-
-                decimal donGia = Convert.ToDecimal(selectedSP.GIABAN.GetValueOrDefault(0));
-                decimal thanhTien = donGia * soLuongChon;
-                txtT.Text = thanhTien.ToString("N0");
+                MessageBox.Show("Số lượng vượt quá tồn kho!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                nudSL.Value = soLuongTon;
+                soLuongChon = soLuongTon;
             }
+
+            txtCL.Text = (soLuongTon - soLuongChon).ToString();
+            txtT.Text = ((selectedSP.GIABAN ?? 0) * soLuongChon).ToString("N0");
         }
 
         private void btnRSHD_Click(object sender, EventArgs e)
         {
             danhSachSPHoaDon.Clear();
-
             dgvSP.Rows.Clear();
-
             txtTT1.Text = "0";
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            string keyword = txtTID.Text.Trim();
+            string keyword = txtTID.Text.Trim(); // Lấy từ khóa và loại bỏ khoảng trắng thừa
 
             if (string.IsNullOrEmpty(keyword))
             {
@@ -209,7 +170,7 @@ namespace GUI_DoAn
                         .Where(sp => sp.IDSP.Contains(keyword))
                         .ToList();
 
-            lvSP.Items.Clear();
+            lvSP.Items.Clear(); // Xóa các mục hiện có
 
             foreach (var sp in listSP)
             {
@@ -218,28 +179,28 @@ namespace GUI_DoAn
                 lvi.SubItems.Add(sp.LOAISP?.TENLOAI ?? "");
                 lvi.SubItems.Add(sp.GIABAN?.ToString("N0"));
                 lvi.SubItems.Add(sp.SOLUONG?.ToString());
-                lvi.SubItems.Add(sp.SIZE);
+                lvi.SubItems.Add(sp.SIZE); 
                 lvi.Tag = sp;
-                lvSP.Items.Add(lvi);
+                lvSP.Items.Add(lvi); // Thêm mục vào ListView
             }
         }
 
         private void frmThongTinSP_FormClosed(object sender, FormClosedEventArgs e)
         {
-            db.Dispose();
+            db.Dispose(); 
         }
 
         private void txtKT_TextChanged(object sender, EventArgs e)
         {
             if (decimal.TryParse(txtKT.Text, out decimal tienKhachTra) &&
-        decimal.TryParse(txtTT1.Text, out decimal tongTien))
+        decimal.TryParse(txtTT1.Text, out decimal tongTien)) 
             {
 
                 decimal tienThua = tienKhachTra - tongTien;
 
                 if (tienThua < 0)
                 {
-                    txtTT.Text = "Khách trả thiếu " + Math.Abs(tienThua).ToString("N0") + " đ";
+                    txtTT.Text = "Khách trả thiếu " + Math.Abs(tienThua).ToString("N0") + " đ"; 
                 }
                 else
                 {
@@ -343,88 +304,58 @@ namespace GUI_DoAn
 
         private void btnIB_Click(object sender, EventArgs e)
         {
-            if (danhSachSPHoaDon.Count == 0)
+            if (!decimal.TryParse(txtTT1.Text.Replace(",", "").Replace(".", ""), out decimal tongTien))
             {
-                MessageBox.Show("Vui lòng thêm sản phẩm vào hóa đơn.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Tổng tiền không hợp lệ.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            decimal tongTien;
-            if (!decimal.TryParse(txtTT1.Text.Replace(".", "").Replace(",", ""), out tongTien))
+            if (!decimal.TryParse(txtKT.Text.Replace(",", "").Replace(".", ""), out decimal tienKhach)
+                || tienKhach < tongTien)
             {
-                MessageBox.Show("Tổng tiền không hợp lệ. Vui lòng kiểm tra lại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            decimal tienKhachTra;
-            if (!decimal.TryParse(txtKT.Text.Replace(".", "").Replace(",", ""), out tienKhachTra) || tienKhachTra < tongTien)
-            {
-                MessageBox.Show("Khách hàng trả chưa đủ tiền.", "Lỗi thanh toán", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Khách trả chưa đủ tiền.", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
-
                 string newIDHD = TaoIDHoaDonMoi();
-                string idNhanVien = nhanVienHienTai?.ID;
-                DateTime ngayTao = DateTime.Now;
-
-                HOADON newHD = new HOADON
+                HOADON hd = new HOADON
                 {
                     IDHD = newIDHD,
-                    NGAYTAO = ngayTao,
-                    ID_USER = idNhanVien,
-                    TONG_TIEN = (double)tongTien,
+                    NGAYTAO = DateTime.Now,
+                    ID_USER = nhanVienHienTai?.ID,
+                    TONG_TIEN = (double)tongTien
                 };
-                db.HOADONs.Add(newHD);
+                hdService.Add(hd);
 
-                db.SaveChanges();
-
-                foreach (var spBan in danhSachSPHoaDon)
+                foreach (var sp in danhSachSPHoaDon)
                 {
-                    var spGoc = db.SANPHAMs.Find(spBan.IDSP);
-
+                    var spGoc = spService.GetById(sp.IDSP);
                     if (spGoc != null)
                     {
-                        double donGia = spBan.GIABAN.GetValueOrDefault(0.0);
-                        int soLuong = spBan.SOLUONG.GetValueOrDefault(0);
-                        double thanhTienCT = donGia * soLuong;
-
                         CHITIET_HOADON cthd = new CHITIET_HOADON
                         {
                             IDHD = newIDHD,
-                            IDSP = spBan.IDSP,
-                            SL = soLuong,
-                            TONGTIEN = thanhTienCT
+                            IDSP = sp.IDSP,
+                            SL = sp.SOLUONG ?? 0,
+                            TONGTIEN = (sp.GIABAN ?? 0) * (sp.SOLUONG ?? 0)
                         };
+                        cthdService.Add(cthd);
 
-                        db.CHITIET_HOADON.Add(cthd);
-
-                        spGoc.SOLUONG -= soLuong;
+                        spGoc.SOLUONG -= sp.SOLUONG ?? 0;
+                        spService.Update(spGoc);
                     }
                 }
 
-                db.SaveChanges();
                 txtTTHD.Text = newIDHD;
-                btnXB_Click(sender, e); 
-                MessageBox.Show($"✅ In bill và Lưu hóa đơn {newIDHD} thành công!", "Hoàn tất giao dịch", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadLvSP(); 
+                MessageBox.Show($"✅ Lưu hóa đơn {newIDHD} thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadLvSP();
                 btnRSHD_Click(sender, e);
-                txtTTHD.Text = TaoIDHoaDonMoi(); 
-
-            }
-            catch (System.Data.Entity.Validation.DbEntityValidationException vex)
-            {
-                var errors = vex.EntityValidationErrors
-                    .SelectMany(x => x.ValidationErrors)
-                    .Select(x => $"{x.PropertyName}: {x.ErrorMessage}");
-                MessageBox.Show($"Lỗi Validation: {string.Join("\n", errors)}", "Lỗi dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                string innerError = ex.InnerException != null ? $"\nChi tiết: {ex.InnerException.Message}" : "";
-                MessageBox.Show($"Lỗi khi lưu hóa đơn hoặc cập nhật tồn kho: {ex.Message}{innerError}", "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khi lưu hóa đơn: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -433,7 +364,7 @@ namespace GUI_DoAn
 
             var maxId = db.HOADONs
                           .AsEnumerable() 
-                          .Where(hd => hd.IDHD != null && hd.IDHD.StartsWith("HD"))
+                          .Where(hd => hd.IDHD != null && hd.IDHD.StartsWith("HD")) // Lọc các ID hợp lệ
                           .Select(hd =>
                           {
                               string numberPart = hd.IDHD.Substring(2);
@@ -447,7 +378,7 @@ namespace GUI_DoAn
 
             int nextNumber = (maxId.HasValue ? maxId.Value : 0) + 1;
 
-            return "HD" + nextNumber.ToString();
+            return "HD" + nextNumber.ToString(); // ID mới
         }
 
         private void btnReload_Click(object sender, EventArgs e)
@@ -462,9 +393,9 @@ namespace GUI_DoAn
             {
                 try
                 {
-                    rtbHD.Clear();
+                    rtbHD.Clear(); 
                     if (txtKT != null)
-                        txtKT.Text = "0";
+                        txtKT.Text = "0"; // Reset tiền khách trả
 
                     MessageBox.Show("Đã làm mới hóa đơn thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -474,5 +405,7 @@ namespace GUI_DoAn
                 }
             }
         }
+
+       
     }
 }

@@ -7,16 +7,61 @@ using System.Threading.Tasks;
 
 namespace BUS_DoAn
 {
-    public class TaiKhoanService
-    {
+        public class TaiKhoanService
+        {
         private readonly TiemBanhDB db = new TiemBanhDB();
 
-        public bool KiemTraDangNhap(string username, string password)
+        // ✅ 1. Lấy toàn bộ tài khoản
+        public List<TAIKHOAN> GetAll()
         {
-            var tk = db.TAIKHOANs
-                .FirstOrDefault(x => x.USERNAME == username && x.PASSWORD_USER == password);
+            return db.TAIKHOANs.ToList();
+        }
 
-            return tk != null;
+        // ✅ 2. Tìm tài khoản theo ID
+        public TAIKHOAN GetById(string id)
+        {
+            return db.TAIKHOANs.FirstOrDefault(t => t.ID == id);
+        }
+
+        // ✅ 3. Kiểm tra đăng nhập
+        public TAIKHOAN KiemTraDangNhap(string username, string password)
+        {
+            return db.TAIKHOANs.FirstOrDefault(t =>
+                t.USERNAME == username && t.PASSWORD_USER == password);
+        }
+
+        // ✅ 4. Thêm tài khoản
+        public bool Add(TAIKHOAN tk)
+        {
+            if (db.TAIKHOANs.Any(t => t.ID == tk.ID)) return false;
+
+            db.TAIKHOANs.Add(tk);
+            db.SaveChanges();
+            return true;
+        }
+
+        // ✅ 5. Cập nhật tài khoản
+        public bool Update(TAIKHOAN tk)
+        {
+            var existing = db.TAIKHOANs.FirstOrDefault(t => t.ID == tk.ID);
+            if (existing == null) return false;
+
+            existing.USERNAME = tk.USERNAME;
+            existing.PASSWORD_USER = tk.PASSWORD_USER;
+            db.SaveChanges();
+            return true;
+        }
+
+        // ✅ 6. Xóa tài khoản
+        public bool Delete(string id)
+        {
+            var tk = db.TAIKHOANs.FirstOrDefault(t => t.ID == id);
+            if (tk == null) return false;
+
+            db.TAIKHOANs.Remove(tk);
+            db.SaveChanges();
+            return true;
         }
     }
 }
+    

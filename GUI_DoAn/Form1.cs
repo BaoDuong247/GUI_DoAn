@@ -14,9 +14,11 @@ namespace GUI_DoAn
 {
     public partial class Form1 : Form
     {
-        public static string currentUserId = "";
-        public static string currentUserRole = "";
-        TaiKhoanService taiKhoanService = new TaiKhoanService();
+        public static string currentUserId = ""; //Lưu ID
+        public static string currentUserRole = ""; //Lưu Chức Vụ
+        private readonly TaiKhoanService taiKhoanService = new TaiKhoanService();
+        private NhanVienService nvService = new NhanVienService();
+
 
         public Form1()
         {
@@ -25,13 +27,13 @@ namespace GUI_DoAn
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            txtMK.UseSystemPasswordChar = true;
+            txtMK.UseSystemPasswordChar = true; // Ẩn mật khẩu khi tải form
 
         }
 
         private void ckbHTMK_CheckedChanged(object sender, EventArgs e)
         {
-            txtMK.UseSystemPasswordChar = !ckbHTMK.Checked;
+            txtMK.UseSystemPasswordChar = !ckbHTMK.Checked; // Hiện/Ẩn mật khẩu
         }
 
         private void btnDN_Click(object sender, EventArgs e)
@@ -45,33 +47,28 @@ namespace GUI_DoAn
                 return;
             }
 
-            using (var db = new TiemBanhDB())
+            var tk = taiKhoanService.KiemTraDangNhap(username, password);
+
+            if (tk != null)
             {
+                // Lấy thông tin nhân viên tương ứng
+                var nv = nvService.GetById(tk.ID);
 
-                var tk = db.TAIKHOANs
-               .ToList() 
-               .FirstOrDefault(t => t.USERNAME == username && t.PASSWORD_USER == password);
-
-                if (tk != null)
+                if (nv != null)
                 {
-                    var nv = db.NHANVIENs.FirstOrDefault(n => n.ID == tk.ID);
-
-                    if (nv != null)
-                    {
-                        currentUserId = nv.ID;
-                        currentUserRole = nv.CHUCVU;
-                    }
-
-                    MessageBox.Show("✅ Đăng nhập thành công!");
-
-                    this.Hide();
-                    frmMenu menu = new frmMenu(nv);
-                    menu.Show();
+                    currentUserId = nv.ID;
+                    currentUserRole = nv.CHUCVU;
                 }
-                else
-                {
-                    MessageBox.Show("❌ Sai tài khoản hoặc mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+
+                MessageBox.Show("✅ Đăng nhập thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                this.Hide();
+                frmMenu menu = new frmMenu(nv);
+                menu.Show();
+            }
+            else
+            {
+                MessageBox.Show("❌ Sai tài khoản hoặc mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -85,16 +82,12 @@ namespace GUI_DoAn
             Application.Exit();
         }
 
-        private void panel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
 
         private void Form1_Activated(object sender, EventArgs e)
         {
-            txtTK.Clear();
+            txtTK.Clear(); 
             txtMK.Clear();
-            txtTK.Focus();
+            txtTK.Focus(); 
         }
     }
 }

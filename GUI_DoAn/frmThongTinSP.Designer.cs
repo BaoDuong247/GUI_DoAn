@@ -350,7 +350,6 @@
             this.dgvSP.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvSP.Size = new System.Drawing.Size(701, 250);
             this.dgvSP.TabIndex = 67;
-//            this.dgvSP.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvSP_CellClick);
             // 
             // Column1
             // 
@@ -406,6 +405,7 @@
             this.groupBox1.TabIndex = 69;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = " Hóa Đơn";
+//            this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
             // 
             // btnTID
             // 

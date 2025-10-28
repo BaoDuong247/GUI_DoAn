@@ -1,15 +1,18 @@
-﻿using DAL_DoAn.Models;
+﻿using BUS_DoAn;
+using DAL_DoAn.Models;
 using System;
+using System.Data.Entity;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using System.Data.Entity;
 
 namespace GUI_DoAn
 {
     public partial class frmQuanLySanPham : Form
     {
+        private readonly SanPhamService spService = new SanPhamService();
+        private readonly LoaiSPService loaiService = new LoaiSPService();
         TiemBanhDB db = new TiemBanhDB();
         private byte[] currentImageBytes;
         private string tenFileAnh;
@@ -17,61 +20,51 @@ namespace GUI_DoAn
         {
             InitializeComponent();
         }
-        private void LoadLvSanPham()
+        private void LoadSanPham()
         {
             lvQLSP.Items.Clear();
-            var listSanPham = db.SANPHAMs.Include(sp => sp.LOAISP).ToList();
+            var list = spService.GetAll();
 
-            foreach (var sp in listSanPham)
+            foreach (var sp in list)
             {
-                ListViewItem lvi = new ListViewItem(sp.IDSP);
-                lvi.SubItems.Add(sp.TENSP);
-                lvi.SubItems.Add(sp.LOAISP?.TENLOAI ?? "");
-                lvi.SubItems.Add(sp.GIABAN?.ToString("N0"));
-                lvi.SubItems.Add(sp.GIANHAP?.ToString("N0"));
-                lvi.SubItems.Add(sp.SOLUONG?.ToString());
-                lvi.SubItems.Add(sp.SIZE);
-
-                string trangThai = (sp.SOLUONG.GetValueOrDefault(0) > 0) ? "Còn hàng" : "Hết hàng";
-                lvi.SubItems.Add(trangThai);
-
-                string moTaAnh = (sp.ANHSP != null && sp.ANHSP.Length > 0)
-                    ? "Đã có ảnh minh họa"
-                    : "(Chưa có ảnh minh họa)";
-                lvi.SubItems.Add(moTaAnh);
-                lvi.Tag = sp;
-
-                lvQLSP.Items.Add(lvi);
+                ListViewItem item = new ListViewItem(sp.IDSP);
+                item.SubItems.Add(sp.TENSP);
+                item.SubItems.Add(sp.LOAISP?.TENLOAI ?? "");
+                item.SubItems.Add(sp.GIABAN?.ToString("N0"));
+                item.SubItems.Add(sp.GIANHAP?.ToString("N0"));
+                item.SubItems.Add(sp.SOLUONG?.ToString());
+                item.SubItems.Add(sp.SIZE);
+                item.SubItems.Add(sp.SOLUONG > 0 ? "Còn hàng" : "Hết hàng");
+                item.SubItems.Add(sp.ANHSP != null ? "Đã có ảnh" : "(Chưa có ảnh)");
+                item.Tag = sp;
+                lvQLSP.Items.Add(item);
             }
         }
 
-        private void LoadLvLoaiSanPham()
+        private void LoadLoaiSP()
         {
             lvTTSP.Items.Clear();
-            var listLoaiSP = db.LOAISPs.ToList();
+            var list = loaiService.GetAll();
 
-            foreach (var loai in listLoaiSP)
+            foreach (var loai in list)
             {
-                ListViewItem lvi = new ListViewItem(loai.IDLOAI);
-
-                lvi.SubItems.Add(loai.TENLOAI);
-                lvi.Tag = loai; 
-                lvTTSP.Items.Add(lvi);
+                ListViewItem item = new ListViewItem(loai.IDLOAI);
+                item.SubItems.Add(loai.TENLOAI);
+                item.Tag = loai;
+                lvTTSP.Items.Add(item);
             }
-        }
 
-        private void LoadCmbLoai()
-        {
-            var listLoaiSP = db.LOAISPs.ToList();
-            cmbLoai.DataSource = listLoaiSP;
-            cmbLoai.DisplayMember = "IDLOAI";
+            cmbLoai.DataSource = list;
+            cmbLoai.DisplayMember = "TENLOAI";
             cmbLoai.ValueMember = "IDLOAI";
         }
 
-        private void ClearFormSanPham()
+        // ==================== HÀM HỖ TRỢ ====================
+
+        private void ResetSanPham()
         {
-            txtID.Text = "";
-            txtSP.Text = "";
+            txtID.Clear();
+            txtSP.Clear();
             cmbLoai.SelectedIndex = -1;
             txtGB.Text = "0";
             txtGN.Text = "0";
@@ -80,47 +73,18 @@ namespace GUI_DoAn
             rdbC.Checked = true;
             picAvatar.Image = null;
             currentImageBytes = null;
-            tenFileAnh = null;
         }
 
-        private void ClearFormLoaiSP()
+        private void ResetLoaiSP()
         {
-            txtML.Text = "";
-            txtTL.Text = "";
-        }
-
-        private void SetEditModeSanPham(bool enable)
-        {
-            txtID.ReadOnly = !enable; 
-            txtSP.ReadOnly = !enable;
-            cmbLoai.Enabled = enable;
-            txtGB.ReadOnly = !enable;
-            txtGN.ReadOnly = !enable;
-            txtSL.ReadOnly = !enable;
-            cmbS.Enabled = enable;
-            rdbC.Enabled = enable;
-            rdbH.Enabled = enable;
-            btnCA.Enabled = enable;
-            btnL.Enabled = enable;
-            btnT.Enabled = !enable;
-            btnS.Enabled = !enable;
-            btnX.Enabled = !enable;
-        }
-
-        private void SetEditModeLoaiSP(bool enable)
-        {
-            txtML.ReadOnly = !enable; 
-            txtTL.ReadOnly = !enable;
-            btnL1.Enabled = enable;
-            btnT1.Enabled = !enable;
-            btnS1.Enabled = !enable;
-            btnX1.Enabled = !enable;
+            txtML.Clear();
+            txtTL.Clear();
         }
 
         private byte[] ImageToByteArray(Image imageIn)
         {
             if (imageIn == null) return null;
-            using (var ms = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
                 imageIn.Save(ms, imageIn.RawFormat);
                 return ms.ToArray();
@@ -129,29 +93,57 @@ namespace GUI_DoAn
 
         private Image ByteArrayToImage(byte[] byteArrayIn)
         {
-            if (byteArrayIn == null || byteArrayIn.Length == 0) return null;
-            using (var ms = new MemoryStream(byteArrayIn))
+            if (byteArrayIn == null) return null;
+            using (MemoryStream ms = new MemoryStream(byteArrayIn))
             {
-                Image returnImage = Image.FromStream(ms);
-                return returnImage;
+                return Image.FromStream(ms);
             }
         }
 
+        private void SetupListViewSanPham()
+        {
+            lvQLSP.View = View.Details;
+            lvQLSP.FullRowSelect = true;
+            lvQLSP.GridLines = true;
+            lvQLSP.Columns.Clear();
+
+            lvQLSP.Columns.Add("Mã SP", 90);
+            lvQLSP.Columns.Add("Tên SP", 180);
+            lvQLSP.Columns.Add("Loại", 120);
+            lvQLSP.Columns.Add("Giá bán", 100);
+            lvQLSP.Columns.Add("Giá nhập", 100);
+            lvQLSP.Columns.Add("Số lượng", 80);
+            lvQLSP.Columns.Add("Size", 60);
+            lvQLSP.Columns.Add("Trạng thái", 100);
+            lvQLSP.Columns.Add("Ảnh", 120);
+        }
+
+        private void SetupListViewLoaiSP()
+        {
+            lvTTSP.View = View.Details;
+            lvTTSP.FullRowSelect = true;
+            lvTTSP.GridLines = true;
+            lvTTSP.Columns.Clear();
+
+            lvTTSP.Columns.Add("Mã loại", 120);
+            lvTTSP.Columns.Add("Tên loại", 220);
+        }
         private void frmQuanLySanPham_Load(object sender, EventArgs e)
         {
             try
             {
+                SetupListViewSanPham();
+                SetupListViewLoaiSP();
+                LoadLoaiSP();
+                LoadSanPham();
+                ResetSanPham();
+                ResetLoaiSP();
+
                 cmbS.Items.Clear();
-                cmbS.Items.Add("N");
-                cmbS.Items.Add("V");
-                cmbS.Items.Add("L");
-                LoadCmbLoai();
-                LoadLvSanPham();
-                LoadLvLoaiSanPham();
-                SetEditModeSanPham(false);
-                SetEditModeLoaiSP(false);
-                ClearFormSanPham();
-                ClearFormLoaiSP();
+                cmbS.Items.Add("N"); // Nhỏ
+                cmbS.Items.Add("V"); // Vừa
+                cmbS.Items.Add("L"); // Lớn
+                cmbS.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
@@ -161,98 +153,140 @@ namespace GUI_DoAn
 
         private void lvQLSP_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (lvQLSP.SelectedItems.Count > 0)
-            {
-                SANPHAM sp = (SANPHAM)lvQLSP.SelectedItems[0].Tag;
-                
-                if (sp != null)
-                {
-                    txtID.Text = sp.IDSP;
-                    txtSP.Text = sp.TENSP;
-                    cmbLoai.SelectedValue = sp.IDLOAI;
-                    txtGB.Text = sp.GIABAN?.ToString();
-                    txtGN.Text = sp.GIANHAP?.ToString();
-                    txtSL.Text = sp.SOLUONG?.ToString();
-                    cmbS.SelectedItem = sp.SIZE; 
-                    if (sp.SOLUONG.GetValueOrDefault(0) > 0)
-                    {
-                        rdbC.Checked = true;
-                    }
-                    else
-                    {
-                        rdbH.Checked = true;
-                    }
-                    
-                    if (sp.ANHSP != null && sp.ANHSP.Length > 0)
-                    {
-                        picAvatar.Image = ByteArrayToImage(sp.ANHSP);
-                        picAvatar.SizeMode = PictureBoxSizeMode.Zoom;
-                    }
-                    else
-                    {
-                        picAvatar.Image = null; 
-                    }
+            if (lvQLSP.SelectedItems.Count == 0) return;
 
-                    SetEditModeSanPham(false);
-                }
-            }
+            var sp = (SANPHAM)lvQLSP.SelectedItems[0].Tag;
+            if (sp == null) return;
+
+            txtID.Text = sp.IDSP;
+            txtSP.Text = sp.TENSP;
+            cmbLoai.SelectedValue = sp.IDLOAI;
+            txtGB.Text = sp.GIABAN?.ToString();
+            txtGN.Text = sp.GIANHAP?.ToString();
+            txtSL.Text = sp.SOLUONG?.ToString();
+            cmbS.SelectedItem = sp.SIZE;
+            rdbC.Checked = sp.SOLUONG > 0;
+            rdbH.Checked = sp.SOLUONG <= 0;
+            picAvatar.Image = ByteArrayToImage(sp.ANHSP);
         }
 
         private void btnT_Click(object sender, EventArgs e)
         {
-            ClearFormSanPham();
-            SetEditModeSanPham(true);
-            txtID.ReadOnly = false; 
-            txtID.Focus();
+            ResetSanPham();
+            txtID.ReadOnly = false;
+            SetEditModeSanPham(true); // Cho phép nhập dữ liệu mới
         }
 
         private void btnS_Click(object sender, EventArgs e)
         {
-            if (lvQLSP.SelectedItems.Count > 0)
+            if (lvQLSP.SelectedItems.Count == 0)
             {
-                SetEditModeSanPham(true);
-                txtID.ReadOnly = true; 
-                txtSP.Focus();
+                MessageBox.Show("⚠️ Vui lòng chọn sản phẩm để sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            else
-            {
-                MessageBox.Show("Vui lòng chọn một sản phẩm để sửa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
+
+            // Khóa ID (không được phép sửa)
+            txtID.ReadOnly = true;
+
+            // Cho phép chỉnh sửa các thông tin còn lại
+            SetEditModeSanPham(true);
+
+            // Thông báo cho người dùng biết đang ở chế độ chỉnh sửa
+            MessageBox.Show("Bạn có thể chỉnh sửa thông tin sản phẩm và nhấn 'Lưu' để cập nhật!",
+                            "Chế độ sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnX_Click(object sender, EventArgs e)
         {
-            if (lvQLSP.SelectedItems.Count > 0)
+            if (lvQLSP.SelectedItems.Count == 0)
             {
-                DialogResult dialog = MessageBox.Show("Bạn có chắc chắn muốn xóa sản phẩm này?", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (dialog == DialogResult.Yes)
-                {
-                    try
-                    {
-                        string idSP = txtID.Text;
-                        SANPHAM sp = db.SANPHAMs.Find(idSP); 
-
-                        if (sp != null)
-                        {
-                            db.SANPHAMs.Remove(sp); 
-                            db.SaveChanges(); 
-                            LoadLvSanPham(); 
-                            ClearFormSanPham();
-                            MessageBox.Show("Xóa sản phẩm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Lỗi khi xóa sản phẩm: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
+                MessageBox.Show("Vui lòng chọn sản phẩm để xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            else
+
+            if (MessageBox.Show("Bạn có chắc chắn muốn xóa sản phẩm này?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                MessageBox.Show("Vui lòng chọn một sản phẩm để xóa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                try
+                {
+                    var sp = (SANPHAM)lvQLSP.SelectedItems[0].Tag;
+                    spService.Delete(sp.IDSP);
+                    LoadSanPham();
+                    ResetSanPham();
+                    MessageBox.Show("Đã xóa sản phẩm thành công!", "Thông báo");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi khi xóa: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
+        private void LoadLvSanPham()
+        {
+            try
+            {
+                lvQLSP.Items.Clear();
+
+                // Lấy toàn bộ danh sách sản phẩm từ DB, kèm theo thông tin loại
+                var listSanPham = db.SANPHAMs
+                    .Include(sp => sp.LOAISP)
+                    .OrderBy(sp => sp.IDSP)
+                    .ToList();
+
+                foreach (var sp in listSanPham)
+                {
+                    ListViewItem item = new ListViewItem(sp.IDSP);
+                    item.SubItems.Add(sp.TENSP);
+                    item.SubItems.Add(sp.LOAISP?.TENLOAI ?? "(Chưa có loại)");
+                    item.SubItems.Add(sp.GIABAN?.ToString("N0") ?? "0");
+                    item.SubItems.Add(sp.GIANHAP?.ToString("N0") ?? "0");
+                    item.SubItems.Add(sp.SOLUONG?.ToString() ?? "0");
+                    item.SubItems.Add(sp.SIZE ?? "N/A");
+
+                    // Trạng thái hiển thị “Còn hàng” hoặc “Hết hàng”
+                    string trangThai = (sp.SOLUONG.GetValueOrDefault(0) > 0 && sp.TRANGTHAI == true)
+                        ? "Còn hàng"
+                        : "Hết hàng";
+                    item.SubItems.Add(trangThai);
+
+                    // Ảnh minh họa
+                    string moTaAnh = (sp.ANHSP != null && sp.ANHSP.Length > 0)
+                        ? "Đã có ảnh"
+                        : "(Chưa có ảnh)";
+                    item.SubItems.Add(moTaAnh);
+
+                    // Lưu đối tượng gốc để dễ xử lý khi chọn
+                    item.Tag = sp;
+
+                    lvQLSP.Items.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi tải danh sách sản phẩm: " + ex.Message, "Lỗi",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        private void SetEditModeSanPham(bool enable)
+        {
+            // Cho phép hoặc khóa các control khi thêm/sửa sản phẩm
+            txtID.ReadOnly = !enable;
+            txtSP.ReadOnly = !enable;
+            cmbLoai.Enabled = enable;
+            txtGB.ReadOnly = !enable;
+            txtGN.ReadOnly = !enable;
+            txtSL.ReadOnly = !enable;
+            cmbS.Enabled = enable;
+            rdbC.Enabled = enable;
+            rdbH.Enabled = enable;
+            btnCA.Enabled = enable;   // Nút chọn ảnh
+            btnL.Enabled = enable;    // Nút lưu
+
+            // Khi bật chế độ chỉnh sửa => ẩn các nút T/S/X để tránh thao tác chồng chéo
+            btnT.Enabled = !enable;
+            btnS.Enabled = !enable;
+            btnX.Enabled = !enable;
+        }
         private void btnL_Click(object sender, EventArgs e)
         {
             try
@@ -261,10 +295,12 @@ namespace GUI_DoAn
                     string.IsNullOrWhiteSpace(txtSP.Text) ||
                     cmbLoai.SelectedValue == null)
                 {
-                    MessageBox.Show("Vui lòng nhập đầy đủ ID, Tên SP và chọn Loại SP.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Vui lòng nhập đầy đủ ID, Tên SP và chọn Loại SP.",
+                                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
+                // Tìm sản phẩm
                 SANPHAM sp = db.SANPHAMs.Find(txtID.Text);
                 bool isNew = (sp == null);
 
@@ -272,53 +308,34 @@ namespace GUI_DoAn
                 {
                     sp = new SANPHAM();
                     sp.IDSP = txtID.Text;
-                    db.SANPHAMs.Add(sp); 
+                    db.SANPHAMs.Add(sp);
                 }
+
+                // Gán giá trị mới
                 sp.TENSP = txtSP.Text;
                 sp.IDLOAI = cmbLoai.SelectedValue.ToString();
-
-                if (double.TryParse(txtGB.Text, out double giaBan))
-                    sp.GIABAN = giaBan;
-
-                if (double.TryParse(txtGN.Text, out double giaNhap))
-                    sp.GIANHAP = giaNhap;
-
-                if (int.TryParse(txtSL.Text, out int soLuong))
-                    sp.SOLUONG = soLuong;
-
+                sp.GIABAN = double.TryParse(txtGB.Text, out double gb) ? gb : 0;
+                sp.GIANHAP = double.TryParse(txtGN.Text, out double gn) ? gn : 0;
+                sp.SOLUONG = int.TryParse(txtSL.Text, out int sl) ? sl : 0;
                 sp.SIZE = cmbS.SelectedItem?.ToString();
+                sp.TRANGTHAI = rdbC.Checked;
 
-                if (rdbH.Checked)
-                {
-                    sp.SOLUONG = 0; 
-                    sp.TRANGTHAI = false;
-                }
-                else if (sp.SOLUONG.GetValueOrDefault(0) > 0)
-                {
-                    sp.TRANGTHAI = true; 
-                }
-                else 
-                {
-                    sp.SOLUONG = 0;
-                    sp.TRANGTHAI = false;
-                    rdbH.Checked = true; 
-                }
-
-                txtSL.Text = sp.SOLUONG.ToString(); 
+                // Ảnh
                 if (picAvatar.Image != null)
-                {
                     sp.ANHSP = ImageToByteArray(picAvatar.Image);
-                }
                 else
-                {
-                    sp.ANHSP = null; 
-                }
-                db.SaveChanges();
-                sp.ANHSP = currentImageBytes;
+                    sp.ANHSP = null;
 
+                // Lưu thay đổi
+                db.SaveChanges();
+
+                // Làm mới ListView
                 LoadLvSanPham();
+
                 SetEditModeSanPham(false);
-                MessageBox.Show(isNew ? "Thêm sản phẩm thành công!" : "Cập nhật sản phẩm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                MessageBox.Show(isNew ? "Thêm sản phẩm thành công!" : "Cập nhật sản phẩm thành công!",
+                                "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -382,76 +399,67 @@ namespace GUI_DoAn
 
         private void lvTTSP_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (lvTTSP.SelectedItems.Count > 0)
-            {
-                LOAISP loai = (LOAISP)lvTTSP.SelectedItems[0].Tag;
-
-                if (loai != null)
-                {
-                    txtML.Text = loai.IDLOAI;
-                    txtTL.Text = loai.TENLOAI;
-                    SetEditModeLoaiSP(false);
-                }
-            }
+            if (lvTTSP.SelectedItems.Count == 0) return;
+            var loai = (LOAISP)lvTTSP.SelectedItems[0].Tag;
+            txtML.Text = loai.IDLOAI;
+            txtTL.Text = loai.TENLOAI;
         }
 
         private void btnT1_Click(object sender, EventArgs e)
         {
-            ClearFormLoaiSP();
-            SetEditModeLoaiSP(true);
+            ResetLoaiSP();
             txtML.ReadOnly = false;
-            txtML.Focus();
         }
 
         private void btnS1_Click(object sender, EventArgs e)
         {
-            if (lvTTSP.SelectedItems.Count > 0)
+            if (lvTTSP.SelectedItems.Count == 0)
             {
-                SetEditModeLoaiSP(true);
-                txtML.ReadOnly = true;
-                txtTL.Focus();
+                MessageBox.Show("Vui lòng chọn loại sản phẩm để sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            else
-            {
-                MessageBox.Show("Vui lòng chọn một loại sản phẩm để sửa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
+            txtML.ReadOnly = true;
         }
 
         private void btnX1_Click(object sender, EventArgs e)
         {
-            if (lvTTSP.SelectedItems.Count > 0)
+            try
             {
-                DialogResult dialog = MessageBox.Show("Bạn có chắc chắn muốn xóa loại này?\n(Xóa loại sẽ xóa TẤT CẢ sản phẩm thuộc loại đó!)", "Cảnh báo xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (dialog == DialogResult.Yes)
+                // ✅ Kiểm tra xem có chọn sản phẩm nào không
+                if (lvQLSP.SelectedItems.Count == 0)
                 {
-                    try
+                    MessageBox.Show("⚠️ Vui lòng chọn thông tin sản phẩm cần xóa!",
+                        "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // ✅ Lấy sản phẩm được chọn
+                var sp = (SANPHAM)lvQLSP.SelectedItems[0].Tag;
+
+                // ✅ Hỏi xác nhận trước khi xóa
+                var confirm = MessageBox.Show($"Bạn có chắc muốn xóa sản phẩm '{sp.TENSP}' không?",
+                    "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (confirm == DialogResult.Yes)
+                {
+                    // Gọi Service để xóa
+                    if (spService.Delete(sp.IDLOAI))
                     {
-                        string idLoai = txtML.Text;
-                        LOAISP loai = db.LOAISPs.Find(idLoai);
-
-                        if (loai != null)
-                        {
-                            db.LOAISPs.Remove(loai); 
-                                                     
-                            db.SaveChanges(); 
-
-                            LoadLvLoaiSanPham();
-                            LoadLvSanPham();
-                            LoadCmbLoai();
-                            ClearFormLoaiSP();
-
-                            MessageBox.Show("Xóa loại sản phẩm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
+                        MessageBox.Show("✅ Xóa sản phẩm thành công!",
+                            "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        LoadSanPham(); // Tải lại danh sách
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        MessageBox.Show("Lỗi khi xóa loại sản phẩm: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("❌ Lỗi khi xóa sản phẩm!",
+                            "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Vui lòng chọn một loại sản phẩm để xóa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Lỗi khi xóa: " + ex.Message,
+                    "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -461,31 +469,30 @@ namespace GUI_DoAn
             {
                 if (string.IsNullOrWhiteSpace(txtML.Text) || string.IsNullOrWhiteSpace(txtTL.Text))
                 {
-                    MessageBox.Show("Mã loại và Tên loại không được để trống.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Vui lòng nhập đầy đủ thông tin loại sản phẩm!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                LOAISP loai = db.LOAISPs.Find(txtML.Text);
-                bool isNew = (loai == null);
+                LOAISP loai = new LOAISP
+                {
+                    IDLOAI = txtML.Text,
+                    TENLOAI = txtTL.Text
+                };
+
+                bool isNew = loaiService.GetById(loai.IDLOAI) == null;
 
                 if (isNew)
-                {
-                    loai = new LOAISP();
-                    loai.IDLOAI = txtML.Text;
-                    db.LOAISPs.Add(loai);
-                }
-                loai.TENLOAI = txtTL.Text;
-                db.SaveChanges();
-                LoadLvLoaiSanPham();
-                LoadLvSanPham();
-                LoadCmbLoai();
+                    loaiService.Add(loai);
+                else
+                    loaiService.Update(loai);
 
-                SetEditModeLoaiSP(false);
-                MessageBox.Show(isNew ? "Thêm loại thành công!" : "Cập nhật loại thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadLoaiSP();
+                LoadSanPham();
+                MessageBox.Show(isNew ? "Thêm loại thành công!" : "Cập nhật loại thành công!", "Thông báo");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi lưu loại sản phẩm: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khi lưu loại SP: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -497,65 +504,42 @@ namespace GUI_DoAn
      
         private void btnTID_Click(object sender, EventArgs e)
         {
-            try
+            string keyword = txtTID.Text.Trim();
+            if (string.IsNullOrEmpty(keyword))
             {
-                string keyword = txtTID.Text.Trim();
-
-                if (string.IsNullOrEmpty(keyword))
-                {
-                    LoadLvSanPham();
-                    MessageBox.Show("Vui lòng nhập mã sản phẩm để tìm kiếm.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                var listSanPham = db.SANPHAMs
-                    .Include(sp => sp.LOAISP)
-                    .Where(sp => sp.IDSP.Contains(keyword))
-                    .ToList();
-
-                lvQLSP.Items.Clear();
-
-                if (listSanPham.Count == 0)
-                {
-                    MessageBox.Show("Không tìm thấy sản phẩm nào có mã: " + keyword, "Kết quả tìm kiếm", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                foreach (var sp in listSanPham)
-                {
-                    ListViewItem lvi = new ListViewItem(sp.IDSP);
-                    lvi.SubItems.Add(sp.TENSP);
-                    lvi.SubItems.Add(sp.LOAISP?.TENLOAI ?? "");
-                    lvi.SubItems.Add(sp.GIABAN?.ToString("N0"));
-                    lvi.SubItems.Add(sp.GIANHAP?.ToString("N0"));
-                    lvi.SubItems.Add(sp.SOLUONG?.ToString());
-                    lvi.SubItems.Add(sp.SIZE);
-
-                    string trangThai = (sp.SOLUONG.GetValueOrDefault(0) > 0) ? "Còn hàng" : "Hết hàng";
-                    lvi.SubItems.Add(trangThai);
-
-                    string moTaAnh = (sp.ANHSP != null && sp.ANHSP.Length > 0)
-                        ? "Đã có ảnh minh họa"
-                        : "(Chưa có ảnh minh họa)";
-                    lvi.SubItems.Add(moTaAnh);
-
-                    lvi.Tag = sp;
-
-                    lvQLSP.Items.Add(lvi);
-                }
+                LoadSanPham();
+                MessageBox.Show("Vui lòng nhập mã sản phẩm để tìm!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            catch (Exception ex)
+
+            var list = spService.GetAll().Where(sp => sp.IDSP.Contains(keyword)).ToList();
+            lvQLSP.Items.Clear();
+
+            if (list.Count == 0)
             {
-                MessageBox.Show("Lỗi khi tìm kiếm: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Không tìm thấy sản phẩm có mã: " + keyword, "Thông báo");
+                return;
+            }
+
+            foreach (var sp in list)
+            {
+                ListViewItem item = new ListViewItem(sp.IDSP);
+                item.SubItems.Add(sp.TENSP);
+                item.SubItems.Add(sp.LOAISP?.TENLOAI ?? "");
+                item.SubItems.Add(sp.GIABAN?.ToString("N0"));
+                item.SubItems.Add(sp.GIANHAP?.ToString("N0"));
+                item.SubItems.Add(sp.SOLUONG?.ToString());
+                item.SubItems.Add(sp.SIZE);
+                item.SubItems.Add(sp.SOLUONG > 0 ? "Còn hàng" : "Hết hàng");
+                item.SubItems.Add(sp.ANHSP != null ? "Đã có ảnh" : "(Chưa có ảnh)");
+                lvQLSP.Items.Add(item);
             }
         }
 
         private void txtTID_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
-            {
                 btnTID_Click(sender, e);
-            }
         }
 
         private void toolStripButton1_Click(object sender, EventArgs e)

@@ -60,6 +60,7 @@
             this.lvNhanVien = new System.Windows.Forms.ListView();
             this.label13 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtCV = new System.Windows.Forms.TextBox();
             this.rdbNu = new System.Windows.Forms.RadioButton();
             this.rdbNam = new System.Windows.Forms.RadioButton();
             this.txtSDT = new System.Windows.Forms.TextBox();
@@ -80,7 +81,6 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label16 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
-            this.txtCV = new System.Windows.Forms.TextBox();
             this.toolStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -155,6 +155,7 @@
             this.toolStrip1.Size = new System.Drawing.Size(1166, 27);
             this.toolStrip1.TabIndex = 42;
             this.toolStrip1.Text = "toolStrip1";
+//            this.toolStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.toolStrip1_ItemClicked);
             // 
             // TroVe
             // 
@@ -388,6 +389,13 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Thông Tin Cá Nhân";
             // 
+            // txtCV
+            // 
+            this.txtCV.Location = new System.Drawing.Point(195, 273);
+            this.txtCV.Name = "txtCV";
+            this.txtCV.Size = new System.Drawing.Size(167, 22);
+            this.txtCV.TabIndex = 31;
+            // 
             // rdbNu
             // 
             this.rdbNu.AutoSize = true;
@@ -589,13 +597,6 @@
             this.label9.Size = new System.Drawing.Size(44, 16);
             this.label9.TabIndex = 28;
             this.label9.Text = "label9";
-            // 
-            // txtCV
-            // 
-            this.txtCV.Location = new System.Drawing.Point(195, 273);
-            this.txtCV.Name = "txtCV";
-            this.txtCV.Size = new System.Drawing.Size(167, 22);
-            this.txtCV.TabIndex = 31;
             // 
             // frmQuanLyNhanVien
             // 
