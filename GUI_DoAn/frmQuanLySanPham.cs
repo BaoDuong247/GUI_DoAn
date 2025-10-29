@@ -282,7 +282,6 @@ namespace GUI_DoAn
             btnCA.Enabled = enable;   // Nút chọn ảnh
             btnL.Enabled = enable;    // Nút lưu
 
-            // Khi bật chế độ chỉnh sửa => ẩn các nút T/S/X để tránh thao tác chồng chéo
             btnT.Enabled = !enable;
             btnS.Enabled = !enable;
             btnX.Enabled = !enable;

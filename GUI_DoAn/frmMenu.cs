@@ -85,13 +85,11 @@ namespace GUI_DoAn
 
             if (result == DialogResult.Yes)
             {
-                Application.Exit(); // ❌ Thoát toàn bộ chương trình
+                Application.Exit(); //Thoát toàn bộ chương trình
             }
 
         }
 
-
-        private bool isShowingCount = false;
         private void btnAdmin_Click(object sender, EventArgs e)
         {
             int soLuongNV = nvService.GetAll().Count;

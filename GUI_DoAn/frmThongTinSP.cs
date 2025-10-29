@@ -405,7 +405,5 @@ namespace GUI_DoAn
                 }
             }
         }
-
-       
     }
 }
